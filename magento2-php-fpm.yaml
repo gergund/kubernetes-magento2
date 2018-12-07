@@ -1,0 +1,81 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: magento2-php-fpm-deployment
+  labels:
+    app: magento2-php-fpm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: magento2-php-fpm
+  template:
+    metadata:
+      labels:
+        app: magento2-php-fpm
+    spec:
+      containers:
+      - name: magento2-php-fpm
+        image: vpn.itwnik.com/docker-magento2_php-fpm
+        env:
+        - name: ENABLE_XDEBUG
+          value: "false"
+        - name: ENABLE_SENDMAIL
+          value: "false"
+        - name: MAGENTO_MODE
+          value: "production"
+        - name: RESET_MAGENTO_MODE
+          value: "false"
+        - name: VARNISH_BACKEND_HOST
+          value: "nginx"
+        - name: VARNISH_PURGE_HOST
+          value: "php-fpm"
+        - name: VARNISH_CACHE_SIZE
+          value: "1g"
+        - name: INSTALL_MAGENTO
+          value: "false"
+        - name: MAGENTO_MYSQL_HOST
+          value: "mysql"
+        - name: MAGENTO_MYSQL_DB
+          value: "magento"
+        - name: MAGENTO_MYSQL_USER
+          value: "magento"
+        - name: MAGENTO_MYSQL_PASSWORD
+          value: "magento"
+        - name: MAGENTO_URL
+          value: "http://docker.magento.loc"
+        - name: MAGENTO_ADMIN_USER
+          value: "admin"
+        - name: MAGENTO_ADMIN_PASSWORD
+          value: "123123qa"
+        - name: MAGENTO_ADMIN_EMAIL
+          value: "gergund@gmail.com"
+        - name: MAGENTO_SESSION_REDIS_HOST
+          value: "redis"
+        - name: MAGENTO_CACHE_REDIS_HOST
+          value: "redis"
+        - name: MAGENTO_FPC_REDIS_HOST
+          value: "redis"
+        - name: MAGENTO_HTTP_CACHE_HOST
+          value: "varnish"
+        ports:
+          - containerPort: 9000
+        volumeMounts:
+          - mountPath: "/var/www/html"
+            name: magento-code
+      volumes:        
+        - name: magento-code
+          persistentVolumeClaim:
+            claimName: magento
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: magento2-php-fpm-service
+spec:
+  ports:
+  - port: 9000
+    protocol: TCP
+  selector:
+    app: magento2-php-fpm
+  type: NodePort

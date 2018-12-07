@@ -1,0 +1,45 @@
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: magento2-nginx-deployment
+  labels:
+    app: magento2-nginx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: magento2-nginx
+  template:
+    metadata:
+      labels:
+        app: magento2-nginx
+    spec:
+      containers:
+      - name: magento2-nginx
+        image: vpn.itwnik.com/docker-magento2_nginx
+        env:
+        - name: NGINX_VHOST
+          value: "docker.magento.loc"
+        - name: NGINX_FASTCGI_HOST
+          value: "10.107.111.74"
+        ports:
+          - containerPort: 80
+        volumeMounts:
+          - mountPath: "/var/www/html"
+            name: magento-code
+      volumes:        
+        - name: magento-code
+          persistentVolumeClaim:
+            claimName: magento
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: magento2-nginx-service
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+  selector:
+    app: magento2-nginx
+  type: NodePort
